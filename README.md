@@ -41,6 +41,8 @@ Firebase (optional) – For auth, analytics, and notifications
      <td align="center"><img src="https://github.com/user-attachments/assets/1b5d50f1-3902-45ea-9bd5-e23b763c96ae" width="250" /></td>
     <td align="center"><img src="https://github.com/user-attachments/assets/9d5d093d-17ff-402d-9a23-c09f3c48e2ce" width="250" /></td>
     <td align="center"><img src="https://github.com/user-attachments/assets/cf618783-6887-436f-bfde-69ba3ca0a1cb" width="250" /></td>
+    <td align="center"><img src="https://github.com/user-attachments/assets/3773386f-e88b-42be-8190-ec20b69e1ae0" width="250" /></td>
+    
   </tr>
 </table>
 
