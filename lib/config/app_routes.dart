@@ -1,5 +1,6 @@
 import 'package:apnamall_ecommerce_app/features/auth/screens/login_screen.dart';
 import 'package:apnamall_ecommerce_app/features/auth/screens/signup_screen.dart';
+import 'package:apnamall_ecommerce_app/features/cart/screens/cart_screen.dart';
 import 'package:apnamall_ecommerce_app/features/products/screens/product_detail_screen.dart';
 import 'package:apnamall_ecommerce_app/features/products/screens/product_home_screen.dart';
 import 'package:apnamall_ecommerce_app/main_screen.dart';
@@ -13,6 +14,8 @@ class AppRoutes {
   static const String routeHome = "/home";
   static const String routeMain = "/main";
   static const String routeProductDetail = "/product-detail";
+  static const String routeCart = "/cart";
+
 
 
 
@@ -23,6 +26,7 @@ class AppRoutes {
     routeMain: (context) => MainScreen(),
     routeHome: (context) => HomeScreen(),
     routeProductDetail: (context) => ProductDetailScreen(),
+    routeCart: (context) => CartScreen(),
 
   };
 }

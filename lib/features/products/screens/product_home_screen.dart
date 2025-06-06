@@ -3,7 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+
+  final List<String> bannerImages = [
+    "assets/images/shoes_image.jpg",
+    "assets/images/shoes_image.jpg",
+    "assets/images/shoes_image.jpg",
+    "assets/images/shoes_image.jpg",
+    "assets/images/shoes_image.jpg",
+  ];
+
   final List<Map<String, dynamic>> categories = [
     {"image": "assets/images/shoes_category.png", "name": "Shoes"},
     {"image": "assets/images/beauty_category.png", "name": "Beauty"},
@@ -40,8 +57,6 @@ class HomeScreen extends StatelessWidget {
       "image": "assets/images/makup_kit.png",
     },
   ];
-
-  HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -131,14 +146,54 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           SizedBox(height: 20),
-          CarouselSlider(
-            items: [_buildBanner(context)],
-            options: CarouselOptions(
-              height: 160,
-              enlargeCenterPage: true,
-              autoPlay: true,
-              viewportFraction: 0.9,
-            ),
+          Stack(
+            children: [
+              CarouselSlider(
+                items: bannerImages.map((imagePath) {
+                  return _buildBanner(context, imagePath);
+                }).toList(),
+                options: CarouselOptions(
+                  height: 160,
+                  enlargeCenterPage: true,
+                  autoPlay: true,
+                  viewportFraction: 0.9,
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                ),
+              ),
+              // Indicator overlay
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(bannerImages.length, (index) {
+                    return AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
+                      margin: EdgeInsets.symmetric(horizontal: 2),
+                      height: 8,
+                      width: _currentIndex == index ? 13 : 8,
+                      decoration: BoxDecoration(
+                        color: _currentIndex == index
+                            ? Colors.black
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _currentIndex == index
+                              ? Colors.black
+                              : Colors.black54,
+                          width: 1.5,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
           ),
 
           SizedBox(height: 20),
@@ -188,19 +243,27 @@ class HomeScreen extends StatelessWidget {
             children: [
               Text(
                 "Special For You",
-                style: TextStyle(fontSize: 16,fontFamily:"Poppins", fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Text(
                 "See all",
-                style: TextStyle(color: Color(0xffff650e),fontFamily:"Poppins", fontSize: 12.5, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Color(0xffff650e),
+                  fontFamily: "Poppins",
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
           SizedBox(height: 10),
 
           GridView.extent(
-            physics:
-                NeverScrollableScrollPhysics(),
+            physics: NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             maxCrossAxisExtent: 200,
             mainAxisSpacing: 12,
@@ -212,7 +275,8 @@ class HomeScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.pushNamed(context, AppRoutes.routeProductDetail);
                 },
-                child: _buildProductCard(products[index], width));
+                child: _buildProductCard(products[index], width),
+              );
             }),
           ),
         ],
@@ -220,7 +284,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBanner(BuildContext context) {
+  Widget _buildBanner(BuildContext context, String imagePath) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
@@ -230,8 +294,7 @@ class HomeScreen extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset("assets/images/shoes_image.jpg", fit: BoxFit.cover),
-
+          Image.asset(imagePath, fit: BoxFit.cover),
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -244,7 +307,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-
           Positioned(
             left: 16,
             top: 20,
@@ -284,11 +346,10 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 2),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xffff650e),
-                    minimumSize: Size(80, 20),
+                    minimumSize: Size(60, 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -382,10 +443,10 @@ class HomeScreen extends StatelessWidget {
                               width: 14,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
+                                color: Colors.grey.shade300,
 
                                 shape: BoxShape.circle,
-                               ),
+                              ),
                               child: Text(
                                 "+2",
                                 style: TextStyle(

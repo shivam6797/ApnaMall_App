@@ -1,3 +1,4 @@
+import 'package:apnamall_ecommerce_app/config/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -103,7 +104,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 Positioned(
                   top: 50,
                   left: 16,
-                  child: _buildCircleIcon(FontAwesomeIcons.chevronLeft , (){
+                  child: _buildCircleIcon(FontAwesomeIcons.chevronLeft, () {
                     Navigator.pop(context);
                   }),
                 ),
@@ -294,7 +295,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     "deliver crisp highs, rich mids, and deep bass. Built with durable materials, "
                                     "a foldable structure, and sleek matte finish — perfect for everyday use.\n\n"
                                     "Perfect for professionals, students, and casual listeners. Upgrade your audio journey today!",
-                                    style: TextStyle(fontSize: 13,fontFamily:"Poppins",fontWeight:FontWeight.w500),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontFamily: "Poppins",
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
 
@@ -373,14 +378,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             left: 16,
             right: 16,
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical:8),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Row(
                 children: [
-                  /// 🔘 White Bordered Pill Shaped Quantity Control
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
@@ -418,12 +422,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ],
                     ),
                   ),
-
                   Spacer(),
-
-                  /// 🛒 Add to Cart Button
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.routeCart);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xffff650e),
                       shape: RoundedRectangleBorder(
@@ -434,7 +437,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
                         "Add to Cart",
-                        style: TextStyle(color: Colors.white,fontFamily:"Poppins",fontWeight:FontWeight.w500),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Poppins",
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -447,7 +454,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildCircleIcon(IconData iconData , [VoidCallback? ontap]) {
+  Widget _buildCircleIcon(IconData iconData, [VoidCallback? ontap]) {
     return GestureDetector(
       onTap: ontap,
       child: Container(
@@ -456,7 +463,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           shape: BoxShape.circle,
           color: Colors.white,
           boxShadow: [
-            BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Icon(iconData, size: 20, color: Colors.black),
@@ -487,11 +498,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: TextStyle(color: Colors.black87, fontSize: 13,fontFamily:"Poppins",fontWeight:FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 13,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w500,
+                ),
                 children: [
                   TextSpan(
                     text: "$title: ",
-                    style: TextStyle(fontWeight: FontWeight.bold,fontFamily:"Poppins"),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: "Poppins",
+                    ),
                   ),
                   TextSpan(text: value),
                 ],
@@ -515,7 +534,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           children: [
             Text(
               name,
-              style: TextStyle(fontWeight: FontWeight.bold,fontFamily:"Poppins", fontSize: 13),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: "Poppins",
+                fontSize: 13,
+              ),
             ),
             SizedBox(width: 10),
             Row(
@@ -530,7 +553,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
         SizedBox(height: 4),
-        Text(comment, style: TextStyle(fontSize: 13, color: Colors.black87,fontWeight: FontWeight.w500,fontFamily:"Poppins")),
+        Text(
+          comment,
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            fontFamily: "Poppins",
+          ),
+        ),
       ],
     );
   }
