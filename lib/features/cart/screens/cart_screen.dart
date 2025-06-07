@@ -160,7 +160,7 @@ class _CartScreenState extends State<CartScreen> {
         title: Text("My Cart", style: TextStyle(color: Colors.black, fontFamily: "Poppins", fontWeight: FontWeight.w700, fontSize: 18)),
       ),
       body: Column(
-        children: [
+        children: [ 
           Expanded(
             child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -294,7 +294,7 @@ class _CartScreenState extends State<CartScreen> {
                   child: ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: Color(0xffff650e),
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),

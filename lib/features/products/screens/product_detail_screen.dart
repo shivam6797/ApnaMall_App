@@ -7,6 +7,7 @@ class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ProductDetailScreenState createState() => _ProductDetailScreenState();
 }
 
@@ -31,7 +32,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: Stack(
