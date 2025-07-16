@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.apnamall_ecommerce_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = "29.0.13113456"
 
     compileOptions {
@@ -37,6 +37,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.9.0")
 }
 
 flutter {
