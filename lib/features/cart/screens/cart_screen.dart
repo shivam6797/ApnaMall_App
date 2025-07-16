@@ -1,122 +1,396 @@
+import 'package:apnamall_ecommerce_app/config/app_routes.dart';
+import 'package:apnamall_ecommerce_app/core/utils/shared_prefs.dart';
+import 'package:apnamall_ecommerce_app/core/widgets/cart/cartItem_widget.dart';
+import 'package:apnamall_ecommerce_app/features/cart/data/model/coupon_model.dart';
+import 'package:apnamall_ecommerce_app/features/orders/bloc/order_bloc.dart';
+import 'package:apnamall_ecommerce_app/features/orders/bloc/order_state.dart';
+import 'package:coupon_uikit/coupon_uikit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:apnamall_ecommerce_app/features/cart/bloc/cart_bloc.dart';
+import 'package:apnamall_ecommerce_app/features/cart/bloc/cart_state.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _CartScreenState createState() => _CartScreenState();
+  State<CartScreen> createState() => _CartScreenState();
 }
 
 class _CartScreenState extends State<CartScreen> {
-  int quantity = 1;
+  String? lastMessageId;
 
-  Widget buildCartItem({
-    required String image,
-    required String title,
-    required String category,
-    required double price,
-  }) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12),
+  @override
+  void initState() {
+    super.initState();
+    context.read<CartBloc>().add(FetchCartEvent());
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<OrderBloc, OrderState>(
+      listener: (context, orderState) {
+        if (orderState is OrderSuccess) {
+          context.read<CartBloc>().add(ClearCartEvent());
+          Navigator.pushReplacementNamed(context, '/order-success');
+        } else if (orderState is OrderFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(orderState.error),
+              backgroundColor: Colors.red,
             ),
-            child: Image.asset(image, width: 60, height: 60),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Color(0xFFF8F8F8),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(30),
+              onTap: () {
+                Navigator.maybePop(context);
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                ),
+                child: Icon(Icons.chevron_left, color: Colors.black, size: 30),
+              ),
+            ),
           ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontFamily: "Poppins",
-                          fontWeight: FontWeight.w700,
+          centerTitle: true,
+          title: Text(
+            "My Cart",
+            style: TextStyle(
+              color: Colors.black,
+              fontFamily: "Poppins",
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+            ),
+          ),
+        ),
+        body: BlocConsumer<CartBloc, CartState>(
+          listenWhen: (prev, curr) {
+            if (curr is CartSuccess &&
+                curr.message.isNotEmpty &&
+                curr.messageId != lastMessageId) {
+              return true;
+            }
+            if (curr is CartFailure) return true;
+            return false;
+          },
+          listener: (context, state) {
+            final isCartScreen =
+                ModalRoute.of(context)?.settings.name == AppRoutes.routeCart;
+            if (isCartScreen) {
+              if (state is CartSuccess && state.message.isNotEmpty) {
+                _showSnack(state.message);
+                lastMessageId = state.messageId;
+                context.read<CartBloc>().add(ResetCartMessageEvent());
+              } else if (state is CartFailure) {
+                _showSnack(state.error);
+              }
+            }
+          },
+          builder: (context, state) {
+            if (state is CartLoading) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (state is CartSuccess || state is CartActionInProgress) {
+              final items = (state is CartSuccess)
+                  ? state.cartItems
+                  : (state as CartActionInProgress).cartItems;
+              final updatingId = state is CartActionInProgress
+                  ? state.updatingProductId
+                  : null;
+
+              final subtotal = (state is CartSuccess) ? state.subtotal : 0.0;
+              final discount =
+                  (state is CartSuccess && state.appliedCoupon != null)
+                  ? state.appliedCoupon!.discountAmount
+                  : 0.0;
+              final total = subtotal - discount;
+
+              if (items.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Lottie.asset('assets/lottie/empty_cart.json', width: 200),
+                      const SizedBox(height: 16),
+                      Text(
+                        (state is CartSuccess && state.message.isNotEmpty)
+                            ? state.message
+                            : "Your cart is empty!",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Poppins',
                         ),
                       ),
-                    ),
-                    Icon(Icons.delete_outline, color: Color(0xffff650e)),
-                  ],
-                ),
-                Text(
-                  category,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontFamily: "Poppins",
-                    fontWeight: FontWeight.w500,
+                    ],
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "\$${price.toStringAsFixed(2)}",
-                      style: TextStyle(
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
+                );
+              }
+
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: items.length,
+                      padding: EdgeInsets.all(16),
+                      itemBuilder: (_, index) {
+                        final item = items[index];
+                        final isUpdating = item.productId == updatingId;
+
+                        return CartItemWidget(
+                          item: item,
+                          isUpdating: isUpdating,
+                          onDecrement: () {
+                            context.read<CartBloc>().add(
+                              DecrementQuantityEvent(
+                                productId: item.productId,
+                                quantity: 1,
+                              ),
+                            );
+                          },
+                          onDelete: () {
+                            context.read<CartBloc>().add(
+                              DeleteCartEvent(cartId: item.id),
+                            );
+                          },
+                        );
+                      },
                     ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (quantity > 1) quantity--;
-                              });
-                            },
-                            child: Icon(Icons.remove, size: 18),
+                  ),
+                  buildBottomSheet(context, state, subtotal, discount, total),
+                ],
+              );
+            }
+
+            return Center(
+              heightFactor: 2.8,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Lottie.asset(
+                    'assets/lottie/empty_cart.json',
+                    width: 200,
+                    height: 200,
+                  ),
+                  const Text(
+                    "Your cart is empty!",
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 0.1,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget buildBottomSheet(
+    BuildContext context,
+    CartState state,
+    double subtotal,
+    double discount,
+    double total,
+  ) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          buildCouponBox(context),
+          SizedBox(height: 12),
+          buildPriceRow("Subtotal", "₹${subtotal.toStringAsFixed(2)}"),
+          buildPriceRow("Discount", "- ₹${discount.toStringAsFixed(2)}"),
+          Divider(),
+          buildPriceRow("Total", "₹${total.toStringAsFixed(2)}"),
+          SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                if (state is CartSuccess && state.cartItems.isNotEmpty) {
+                  final address = await SharedPrefs.getSelectedAddress();
+
+                  if (address == null) {
+                    Navigator.pushNamed(context, AppRoutes.routeAddAddress);
+                  } else {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) {
+                        return Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(24),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10,
+                                offset: Offset(0, -4),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 12),
-                          Text(
-                            quantity.toString(),
-                            style: TextStyle(
-                              fontFamily: "Poppins",
-                              fontWeight: FontWeight.bold,
+                          child: SafeArea(
+                            top: false,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Top Notch Handle
+                                Container(
+                                  width: 40,
+                                  height: 5,
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[400],
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+
+                                Text(
+                                  "Use saved address?",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: "Poppins",
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+
+                                // Address Preview Box
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        address.fullAddress,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.routePayment,
+                                      arguments:
+                                          address, 
+                                    );
+                                  },
+                                  icon: const Icon(Icons.check),
+                                  label: const Text("Yes, use this address"),
+                                  style: ElevatedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(50),
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 10),
+                                OutlinedButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.routeAddAddress,
+                                    );
+                                  },
+                                  icon: const Icon(Icons.edit_location_alt),
+                                  label: const Text("No, change address"),
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.black,
+                                    minimumSize: const Size.fromHeight(50),
+                                    side: BorderSide(color: Colors.purple),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                              ],
                             ),
                           ),
-                          SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                quantity++;
-                              });
-                            },
-                            child: Icon(Icons.add, size: 18),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                        );
+                      },
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xffff650e),
+                padding: EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text(
+                "Checkout",
+                style: TextStyle(
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: Colors.white,
                 ),
-              ],
+              ),
             ),
           ),
         ],
@@ -124,195 +398,237 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFFF8F8F8),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(30),
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: Container(
-              width: 40,
-              height: 40,
+  Widget buildCouponBox(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        context.read<CartBloc>().add(FetchCouponsEvent());
+        _showCouponBottomSheet();
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.discount, color: Color(0xffff650e)),
+            SizedBox(width: 12),
+            Text(
+              "Apply Coupon",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xffff650e),
+              ),
+            ),
+            Spacer(),
+            Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCouponBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          maxChildSize: 0.9,
+          minChildSize: 0.5,
+          builder: (context, scrollController) {
+            return Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
+                    blurRadius: 10,
+                    offset: Offset(0, -4),
                   ),
                 ],
               ),
-              child: Icon(Icons.chevron_left, color: Colors.black,size:30,),
-            ),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: BlocBuilder<CartBloc, CartState>(
+                builder: (context, state) {
+                  if (state is CartSuccess && state.coupons.isNotEmpty) {
+                    final coupons = state.coupons;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            margin: EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[600],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          "Available Coupons",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Expanded(
+                          child: ListView.builder(
+                            controller: scrollController,
+                            itemCount: coupons.length,
+                            itemBuilder: (_, index) {
+                              final coupon = coupons[index];
+                              final isSelected =
+                                  state.appliedCoupon?.code == coupon.code;
+
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  context.read<CartBloc>().add(
+                                    ApplyCouponEvent(coupon),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: buildCouponCard(
+                                    coupon,
+                                    isSelected: isSelected,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  } else if (state is CartLoading) {
+                    return Center(child: CircularProgressIndicator());
+                  } else {
+                    return Center(
+                      child: Text(
+                        "No coupons available",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    );
+                  }
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildCouponCard(CouponModel coupon, {required bool isSelected}) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: isSelected ? Color(0xff2E8A85) : Colors.transparent,
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: CouponCard(
+        height: 100,
+        backgroundColor: Color(0xffD5F5F3),
+        curvePosition: 120,
+        borderRadius: 12,
+        curveAxis: Axis.vertical,
+        firstChild: Container(
+          color: Color(0xFF2E8A85),
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "${coupon.discountAmount.toStringAsFixed(0)}%",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                "OFF",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                coupon.description.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 8,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
           ),
         ),
-        centerTitle: true,
-        title: Text("My Cart", style: TextStyle(color: Colors.black, fontFamily: "Poppins", fontWeight: FontWeight.w700, fontSize: 18)),
-      ),
-      body: Column(
-        children: [ 
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                buildCartItem(
-                  image: 'assets/images/men_cotton_hudded_sweter.png',
-                  title: "Men Cotton Hudded Sweter ",
-                  category: "Men Fashion",
-                  price: 70,
+        secondChild: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Coupon Code",
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: Colors.grey.shade700,
                 ),
-                buildCartItem(
-                  image: 'assets/images/smart_watch.png',
-                  title: "Smart Watch",
-                  category: "Electronics",
-                  price: 55,
-                ),
-                buildCartItem(
-                  image: 'assets/images/boat_ear_burds.png',
-                  title: "Wireless Headphone",
-                  category: "Electronics",
-                  price: 120,
-                ),
-                SizedBox(height: 20),
-              ],
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, -2),
+              SizedBox(height: 2),
+              Text(
+                coupon.code,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2E8A85),
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 45,
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: "Enter Discount Code",
-                            hintStyle: TextStyle(
-                              fontFamily: "Poppins",
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey,
-                            ),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          "Apply",
-                          style: TextStyle(
-                            fontFamily: "Poppins",
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xffff650e),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "Valid Till - ${coupon.validTill ?? "N/A"}",
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
                 ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Subtotal",
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      "\$245.00",
-                      style: TextStyle(
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Total",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      "\$245.00",
-                      style: TextStyle(
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xffff650e),
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: Text(
-                      "Checkout",
-                      style: TextStyle(
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildPriceRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          Text(
+            value,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),
