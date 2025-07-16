@@ -2,7 +2,6 @@ import 'package:apnamall_ecommerce_app/config/app_routes.dart';
 import 'package:apnamall_ecommerce_app/core/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -18,13 +17,13 @@ class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _phoneC = TextEditingController();
   final _emailC = TextEditingController();
-  final _passC  = TextEditingController();
+  final _passC = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
-  bool _obscure   = true;
-  bool _remember  = false;
-  bool _loading   = false;
+  bool _obscure = true;
+  bool _remember = false;
+  bool _loading = false;
 
   String? _phoneErr, _emailErr, _passErr;
 
@@ -33,15 +32,15 @@ class _LoginScreenState extends State<LoginScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-  _tabController.addListener(() {
-    if (!_tabController.indexIsChanging) {
-      if (_tabController.index == 0) {
-        _emailC.clear();
-      } else {
-        _phoneC.clear();
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        if (_tabController.index == 0) {
+          _emailC.clear();
+        } else {
+          _phoneC.clear();
+        }
       }
-    }
-  });
+    });
 
     _phoneC.addListener(() {
       setState(() => _phoneErr = Validators.validatePhone(_phoneC.text));
@@ -50,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen>
       setState(() => _emailErr = Validators.validateEmail(_emailC.text));
     });
     _passC.addListener(() {
-      setState(() => _passErr  = Validators.validatePassword(_passC.text));
+      setState(() => _passErr = Validators.validatePassword(_passC.text));
     });
   }
 
@@ -59,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen>
     _tabController.dispose();
     _phoneC.dispose();
     _emailC.dispose();
-    _passC .dispose();
+    _passC.dispose();
     super.dispose();
   }
 
@@ -70,18 +69,22 @@ class _LoginScreenState extends State<LoginScreen>
         setState(() => _loading = state is AuthLoading);
 
         if (state is AuthSuccess) {
-          ScaffoldMessenger.of(ctx)
-              .showSnackBar(const SnackBar(
-                backgroundColor: Colors.green,
-                content: Text('Login successfully!')));
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.green,
+              content: Text('Login successfully!'),
+            ),
+          );
           Navigator.pushNamedAndRemoveUntil(
-              ctx, AppRoutes.routeMain, (_) => false);
+            ctx,
+            AppRoutes.routeMain,
+            (_) => false,
+          );
         }
         if (state is AuthFailure) {
-          ScaffoldMessenger.of(ctx)
-              .showSnackBar(SnackBar(
-                backgroundColor: Colors.red,
-                content: Text(state.message)));
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(backgroundColor: Colors.red, content: Text(state.message)),
+          );
         }
       },
       builder: (ctx, _) => SafeArea(
@@ -98,15 +101,19 @@ class _LoginScreenState extends State<LoginScreen>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 60),
-                  const Text("Welcome Back",
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontFamily: "Poppins",
-                          fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Welcome Back",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontFamily: "Poppins",
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 5),
-                  const Text("Login to access your account",
-                      style:
-                          TextStyle(fontSize: 14, color: Colors.grey)),
+                  const Text(
+                    "Login to access your account",
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
                   const SizedBox(height: 30),
 
                   DefaultTabController(
@@ -132,9 +139,10 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                                 indicatorSize: TabBarIndicatorSize.tab,
                                 labelStyle: const TextStyle(
-                                    fontFamily: "Poppins",
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500),
+                                  fontFamily: "Poppins",
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
                                 labelColor: Colors.white,
                                 unselectedLabelColor: Colors.black,
                                 tabs: const [
@@ -188,17 +196,22 @@ class _LoginScreenState extends State<LoginScreen>
                             activeColor: const Color(0xffff650e),
                             onChanged: (v) => setState(() => _remember = v!),
                           ),
-                          const Text("Remember me",
-                              style: TextStyle(fontSize: 12)),
+                          const Text(
+                            "Remember me",
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ],
                       ),
                       TextButton(
                         onPressed: () {},
-                        child: const Text("Forget password?",
-                            style: TextStyle(
-                                color: Color(0xffff650e),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12)),
+                        child: const Text(
+                          "Forget password?",
+                          style: TextStyle(
+                            color: Color(0xffff650e),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -207,8 +220,10 @@ class _LoginScreenState extends State<LoginScreen>
                   _buildLoginButton(ctx),
 
                   const SizedBox(height: 20),
-                  const Text("Or Sign In With",
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  const Text(
+                    "Or Sign In With",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                   const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -222,17 +237,22 @@ class _LoginScreenState extends State<LoginScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don’t have an account?",
-                          style: TextStyle(fontSize: 12)),
+                      const Text(
+                        "Don’t have an account?",
+                        style: TextStyle(fontSize: 12),
+                      ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(ctx, AppRoutes.routeSignup);
                         },
-                        child: const Text("Sign Up",
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xffff650e),
-                                fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          "Sign Up",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xffff650e),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -252,105 +272,114 @@ class _LoginScreenState extends State<LoginScreen>
     required TextInputType keyboard,
     required String? Function(String?) validator,
     String? errorText,
-  }) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 62,
-            margin: EdgeInsets.only(top: 5),
-            child: TextFormField(
-              controller: controller,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: validator,
-              keyboardType: keyboard,
-              decoration: InputDecoration(
-                errorText: errorText,
-                labelText: label,
-                prefixIcon: Icon(icon, color: Colors.grey.shade600),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(
-                      color: Color(0xffff650e), width: 1.0),
-                ),
-                isDense: true,
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        height: 62,
+        margin: EdgeInsets.only(top: 5),
+        child: TextFormField(
+          controller: controller,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator: validator,
+          keyboardType: keyboard,
+          decoration: InputDecoration(
+            errorText: errorText,
+            labelText: label,
+            prefixIcon: Icon(icon, color: Colors.grey.shade600),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: const BorderSide(
+                color: Color(0xffff650e),
+                width: 1.0,
               ),
             ),
+            isDense: true,
           ),
-        ],
-      );
+        ),
+      ),
+    ],
+  );
 
   Widget _buildPasswordField() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 62,
-            child: TextFormField(
-              controller: _passC,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: Validators.validatePassword,
-              obscureText: _obscure,
-              decoration: InputDecoration(
-                errorText: _passErr,
-                labelText: "Password",
-                prefixIcon: Icon(Icons.lock, color: Colors.grey.shade600),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                      _obscure ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.grey.shade600),
-                  onPressed: () => setState(() => _obscure = !_obscure),
-                ),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide:
-                      const BorderSide(color: Color(0xffff650e), width: 1.0),
-                ),
-                isDense: true,
+    children: [
+      Container(
+        height: 62,
+        child: TextFormField(
+          controller: _passC,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator: Validators.validatePassword,
+          obscureText: _obscure,
+          decoration: InputDecoration(
+            errorText: _passErr,
+            labelText: "Password",
+            prefixIcon: Icon(Icons.lock, color: Colors.grey.shade600),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscure ? Icons.visibility_off : Icons.visibility,
+                color: Colors.grey.shade600,
+              ),
+              onPressed: () => setState(() => _obscure = !_obscure),
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: const BorderSide(
+                color: Color(0xffff650e),
+                width: 1.0,
               ),
             ),
+            isDense: true,
           ),
-        ],
-      );
+        ),
+      ),
+    ],
+  );
 
   Widget _buildLoginButton(BuildContext context) => SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: ElevatedButton(
-          onPressed: _loading
-              ? null
-              : () {
-                  if (_formKey.currentState!.validate()) {
-                    final isEmailTab = _tabController.index == 1;
-                    final identifier =
-                        isEmailTab ? _emailC.text.trim() : _phoneC.text.trim();
-                    context
-                        .read<AuthBloc>()
-                        .add(LoginRequested(identifier, _passC.text.trim()));
-                  }
-                },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xffff650e),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          ),
-          child: _loading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text("Log In",
-                  style:
-                      TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16)),
-        ),
-      );
+    width: double.infinity,
+    height: 50,
+    child: ElevatedButton(
+      onPressed: _loading
+          ? null
+          : () {
+              if (_formKey.currentState!.validate()) {
+                final isEmailTab = _tabController.index == 1;
+                final identifier = isEmailTab
+                    ? _emailC.text.trim()
+                    : _phoneC.text.trim();
+                context.read<AuthBloc>().add(
+                  LoginRequested(identifier, _passC.text.trim()),
+                );
+              }
+            },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xffff650e),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
+      child: _loading
+          ? const CircularProgressIndicator(color: Colors.white)
+          : const Text(
+              "Log In",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+    ),
+  );
 
   Widget _socialButton(String asset) => Container(
-        width: 50,
-        height: 50,
-        alignment: Alignment.center,
-        decoration:
-            BoxDecoration(color: Colors.grey.shade200, shape: BoxShape.circle),
-        child: Image.asset(asset, height: 25, width: 25, fit: BoxFit.contain),
-      );
+    width: 50,
+    height: 50,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: Colors.grey.shade200,
+      shape: BoxShape.circle,
+    ),
+    child: Image.asset(asset, height: 25, width: 25, fit: BoxFit.contain),
+  );
 }
