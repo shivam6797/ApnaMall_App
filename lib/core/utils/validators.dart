@@ -57,4 +57,33 @@ class Validators {
     }
     return null;
   }
+
+  static String? validateCity(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'City is required';
+  }
+  if (value.trim().length < 2) {
+    return 'City must be at least 2 characters';
+  }
+  return null;
+}
+
+static String? validateState(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'State is required';
+  }
+  if (value.trim().length < 2) {
+    return 'State must be at least 2 characters';
+  }
+  return null;
+}
+static String? validatePinCode(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Pin code is required';
+  }
+  if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+    return 'Pin code must be 6 digits';
+  }
+  return null;
+}
 }
