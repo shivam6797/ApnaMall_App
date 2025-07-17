@@ -1,19 +1,36 @@
 import 'package:apnamall_ecommerce_app/core/errors/api_exceptions.dart';
 import 'package:apnamall_ecommerce_app/core/network/api_client.dart';
 import 'package:apnamall_ecommerce_app/core/network/api_endpoint.dart';
+import 'package:apnamall_ecommerce_app/features/address/data/model/address_model.dart';
+import 'package:apnamall_ecommerce_app/features/cart/data/model/cart_item_model.dart';
 
 class OrderRepository {
   final ApiClient apiClient;
 
   OrderRepository({required this.apiClient});
 
-  Future<String> createOrder() async {
+  Future<String> createOrder({
+    required List<CartItemModel> cartItems,
+    required AddressModel address,
+    required double subtotal,
+    required double discount,
+    required double total,
+  }) async {
     try {
       final response = await apiClient.post(
         ApiEndpoint.createOrder,
         body: {
-          "product_id": [],
-          "status": 1, // always 1 for "ordered"
+          "product_ids": cartItems.map((item) => item.productId).toList(),
+          "subtotal": subtotal,
+          "discount": discount,
+          "total": total,
+          "status": 1,
+          "address": {
+            "line": address.fullAddress,
+            "city": address.city,
+            "state": address.state,
+            "postal_code": address.pinCode,
+          },
         },
       );
 

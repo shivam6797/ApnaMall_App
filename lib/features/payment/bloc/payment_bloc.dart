@@ -15,6 +15,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
           amount: event.amount,
           description: event.description,
           customerDetails: event.customerDetails,
+          metadata: event.metadata, // ✅ added this line
         );
 
         emit(PaymentSuccess(paymentIntent.clientSecret));

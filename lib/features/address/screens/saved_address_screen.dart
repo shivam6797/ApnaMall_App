@@ -33,16 +33,12 @@ class _SavedAddressScreenState extends State<SavedAddressScreen> {
     setState(() {
       selectedAddress = address;
     });
-    await SharedPrefs.setSelectedAddress(address);
+    await SharedPrefs.setSelectedAddress(address); // <-- correct method name
   }
 
   void _onProceed() {
     if (selectedAddress != null) {
-      Navigator.pushReplacementNamed(
-        context,
-        AppRoutes.routePayment,
-        arguments: selectedAddress,
-      );
+      Navigator.pop(context); // Return to CartScreen instead of PaymentScreen
     }
   }
 
@@ -75,7 +71,7 @@ class _SavedAddressScreenState extends State<SavedAddressScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Scaffold color white
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text(

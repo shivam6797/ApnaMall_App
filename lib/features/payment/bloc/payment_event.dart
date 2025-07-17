@@ -27,17 +27,23 @@ class CustomerAddress {
 class CustomerDetails {
   final String name;
   final String email;
+  final String phone;
+  final String description; // ✅ ADDED for customer.description
   final CustomerAddress address;
 
   CustomerDetails({
     required this.name,
     required this.email,
+    required this.phone,
+    required this.description, // ✅
     required this.address,
   });
 
   Map<String, dynamic> toJson() => {
         'name': name,
         'email': email,
+        'phone': phone,
+        'description': description, // ✅ Include in JSON
         'address': address.toJson(),
       };
 }
@@ -49,15 +55,17 @@ abstract class PaymentEvent extends Equatable {
 
 class CreatePaymentIntentEvent extends PaymentEvent {
   final int amount;
-  final String description;
+  final String description; // Used in paymentIntent
   final CustomerDetails customerDetails;
+  final Map<String, dynamic>? metadata;
 
   CreatePaymentIntentEvent({
     required this.amount,
     required this.description,
     required this.customerDetails,
+    this.metadata,
   });
 
   @override
-  List<Object?> get props => [amount, description, customerDetails];
+  List<Object?> get props => [amount, description, customerDetails, metadata];
 }

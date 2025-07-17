@@ -2,8 +2,6 @@ import 'package:apnamall_ecommerce_app/config/app_routes.dart';
 import 'package:apnamall_ecommerce_app/core/utils/shared_prefs.dart';
 import 'package:apnamall_ecommerce_app/core/widgets/cart/cartItem_widget.dart';
 import 'package:apnamall_ecommerce_app/features/cart/data/model/coupon_model.dart';
-import 'package:apnamall_ecommerce_app/features/orders/bloc/order_bloc.dart';
-import 'package:apnamall_ecommerce_app/features/orders/bloc/order_state.dart';
 import 'package:coupon_uikit/coupon_uikit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,182 +40,167 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<OrderBloc, OrderState>(
-      listener: (context, orderState) {
-        if (orderState is OrderSuccess) {
-          context.read<CartBloc>().add(ClearCartEvent());
-          Navigator.pushReplacementNamed(context, '/order-success');
-        } else if (orderState is OrderFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(orderState.error),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Color(0xFFF8F8F8),
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(30),
-              onTap: () {
-                Navigator.maybePop(context);
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-                ),
-                child: Icon(Icons.chevron_left, color: Colors.black, size: 30),
+    return Scaffold(
+      backgroundColor: Color(0xFFF8F8F8),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () {
+              Navigator.maybePop(context);
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
               ),
-            ),
-          ),
-          centerTitle: true,
-          title: Text(
-            "My Cart",
-            style: TextStyle(
-              color: Colors.black,
-              fontFamily: "Poppins",
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
+              child: Icon(Icons.chevron_left, color: Colors.black, size: 30),
             ),
           ),
         ),
-        body: BlocConsumer<CartBloc, CartState>(
-          listenWhen: (prev, curr) {
-            if (curr is CartSuccess &&
-                curr.message.isNotEmpty &&
-                curr.messageId != lastMessageId) {
-              return true;
+        centerTitle: true,
+        title: Text(
+          "My Cart",
+          style: TextStyle(
+            color: Colors.black,
+            fontFamily: "Poppins",
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
+      ),
+      body: BlocConsumer<CartBloc, CartState>(
+        listenWhen: (prev, curr) {
+          if (curr is CartSuccess &&
+              curr.message.isNotEmpty &&
+              curr.messageId != lastMessageId) {
+            return true;
+          }
+          if (curr is CartFailure) return true;
+          return false;
+        },
+        listener: (context, state) {
+          final isCartScreen =
+              ModalRoute.of(context)?.settings.name == AppRoutes.routeCart;
+          if (isCartScreen) {
+            if (state is CartSuccess && state.message.isNotEmpty) {
+              _showSnack(state.message);
+              lastMessageId = state.messageId;
+              context.read<CartBloc>().add(ResetCartMessageEvent());
+            } else if (state is CartFailure) {
+              _showSnack(state.error);
             }
-            if (curr is CartFailure) return true;
-            return false;
-          },
-          listener: (context, state) {
-            final isCartScreen =
-                ModalRoute.of(context)?.settings.name == AppRoutes.routeCart;
-            if (isCartScreen) {
-              if (state is CartSuccess && state.message.isNotEmpty) {
-                _showSnack(state.message);
-                lastMessageId = state.messageId;
-                context.read<CartBloc>().add(ResetCartMessageEvent());
-              } else if (state is CartFailure) {
-                _showSnack(state.error);
-              }
-            }
-          },
-          builder: (context, state) {
-            if (state is CartLoading) {
-              return Center(child: CircularProgressIndicator());
-            }
+          }
+        },
+        builder: (context, state) {
+          if (state is CartLoading) {
+            return Center(child: CircularProgressIndicator());
+          }
 
-            if (state is CartSuccess || state is CartActionInProgress) {
-              final items = (state is CartSuccess)
-                  ? state.cartItems
-                  : (state as CartActionInProgress).cartItems;
-              final updatingId = state is CartActionInProgress
-                  ? state.updatingProductId
-                  : null;
+          if (state is CartSuccess || state is CartActionInProgress) {
+            final items = (state is CartSuccess)
+                ? state.cartItems
+                : (state as CartActionInProgress).cartItems;
+            final updatingId = state is CartActionInProgress
+                ? state.updatingProductId
+                : null;
 
-              final subtotal = (state is CartSuccess) ? state.subtotal : 0.0;
-              final discount =
-                  (state is CartSuccess && state.appliedCoupon != null)
-                  ? state.appliedCoupon!.discountAmount
-                  : 0.0;
-              final total = subtotal - discount;
+            final subtotal = (state is CartSuccess) ? state.subtotal : 0.0;
+            final discount =
+                (state is CartSuccess && state.appliedCoupon != null)
+                ? state.appliedCoupon!.discountAmount
+                : 0.0;
+            final total = subtotal - discount;
 
-              if (items.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Lottie.asset('assets/lottie/empty_cart.json', width: 200),
-                      const SizedBox(height: 16),
-                      Text(
-                        (state is CartSuccess && state.message.isNotEmpty)
-                            ? state.message
-                            : "Your cart is empty!",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                        ),
+            if (items.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Lottie.asset('assets/lottie/empty_cart.json', width: 200),
+                    const SizedBox(height: 16),
+                    Text(
+                      (state is CartSuccess && state.message.isNotEmpty)
+                          ? state.message
+                          : "Your cart is empty!",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
                       ),
-                    ],
-                  ),
-                );
-              }
-
-              return Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: items.length,
-                      padding: EdgeInsets.all(16),
-                      itemBuilder: (_, index) {
-                        final item = items[index];
-                        final isUpdating = item.productId == updatingId;
-
-                        return CartItemWidget(
-                          item: item,
-                          isUpdating: isUpdating,
-                          onDecrement: () {
-                            context.read<CartBloc>().add(
-                              DecrementQuantityEvent(
-                                productId: item.productId,
-                                quantity: 1,
-                              ),
-                            );
-                          },
-                          onDelete: () {
-                            context.read<CartBloc>().add(
-                              DeleteCartEvent(cartId: item.id),
-                            );
-                          },
-                        );
-                      },
                     ),
-                  ),
-                  buildBottomSheet(context, state, subtotal, discount, total),
-                ],
+                  ],
+                ),
               );
             }
 
-            return Center(
-              heightFactor: 2.8,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Lottie.asset(
-                    'assets/lottie/empty_cart.json',
-                    width: 200,
-                    height: 200,
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: items.length,
+                    padding: EdgeInsets.all(16),
+                    itemBuilder: (_, index) {
+                      final item = items[index];
+                      final isUpdating = item.productId == updatingId;
+
+                      return CartItemWidget(
+                        item: item,
+                        isUpdating: isUpdating,
+                        onDecrement: () {
+                          context.read<CartBloc>().add(
+                            DecrementQuantityEvent(
+                              productId: item.productId,
+                              quantity: 1,
+                            ),
+                          );
+                        },
+                        onDelete: () {
+                          context.read<CartBloc>().add(
+                            DeleteCartEvent(cartId: item.id),
+                          );
+                        },
+                      );
+                    },
                   ),
-                  const Text(
-                    "Your cart is empty!",
-                    style: TextStyle(
-                      fontSize: 16,
-                      height: 0.1,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                buildBottomSheet(context, state, subtotal, discount, total),
+              ],
             );
-          },
-        ),
+          }
+
+          return Center(
+            heightFactor: 2.8,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Lottie.asset(
+                  'assets/lottie/empty_cart.json',
+                  width: 200,
+                  height: 200,
+                ),
+                const Text(
+                  "Your cart is empty!",
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 0.1,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -252,6 +235,8 @@ class _CartScreenState extends State<CartScreen> {
               onPressed: () async {
                 if (state is CartSuccess && state.cartItems.isNotEmpty) {
                   final address = await SharedPrefs.getSelectedAddress();
+                  final userProfile =
+                      await SharedPrefs.getUserProfile(); // 👈 Fetch user profile
 
                   if (address == null) {
                     Navigator.pushNamed(context, AppRoutes.routeAddAddress);
@@ -281,7 +266,6 @@ class _CartScreenState extends State<CartScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Top Notch Handle
                                 Container(
                                   width: 40,
                                   height: 5,
@@ -291,7 +275,6 @@ class _CartScreenState extends State<CartScreen> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-
                                 Text(
                                   "Use saved address?",
                                   style: TextStyle(
@@ -301,8 +284,6 @@ class _CartScreenState extends State<CartScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-
-                                // Address Preview Box
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(16),
@@ -331,8 +312,16 @@ class _CartScreenState extends State<CartScreen> {
                                     Navigator.pushNamed(
                                       context,
                                       AppRoutes.routePayment,
-                                      arguments:
-                                          address, 
+                                      arguments: {
+                                        'address': address,
+                                        'cartItems': state.cartItems,
+                                        'subtotal': subtotal,
+                                        'discount': discount,
+                                        'total': total,
+                                        'appliedCoupon': state.appliedCoupon,
+                                        'userProfile':
+                                            userProfile, // 👈 Passed here
+                                      },
                                     );
                                   },
                                   icon: const Icon(Icons.check),
@@ -346,7 +335,6 @@ class _CartScreenState extends State<CartScreen> {
                                     ),
                                   ),
                                 ),
-
                                 const SizedBox(height: 10),
                                 OutlinedButton.icon(
                                   onPressed: () {

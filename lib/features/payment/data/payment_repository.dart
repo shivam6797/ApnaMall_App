@@ -13,6 +13,7 @@ class PaymentRepository {
     required int amount,
     required String description,
     required CustomerDetails customerDetails,
+    Map<String, dynamic>? metadata, // ✅ added
     String currency = 'inr',
   }) async {
     try {
@@ -20,7 +21,8 @@ class PaymentRepository {
         'amount': amount,
         'currency': currency,
         'description': description,
-        'customerDetails': customerDetails.toJson(), // 👈 Send full customer object
+        'customerDetails': customerDetails.toJson(),
+        if (metadata != null) 'metadata': metadata, // ✅ add this conditionally
       };
 
       final Response response = await apiClient.post(

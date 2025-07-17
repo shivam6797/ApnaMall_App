@@ -50,3 +50,6 @@ app.*.map.json
 firebase.json
 functions/
 
+# Local properties file for Android
+android/local.properties
+

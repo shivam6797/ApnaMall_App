@@ -12,11 +12,19 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   }
 
   Future<void> _onCreateOrder(
-      CreateOrderEvent event, Emitter<OrderState> emit) async {
+    CreateOrderEvent event,
+    Emitter<OrderState> emit,
+  ) async {
     emit(OrderLoading());
 
     try {
-      final message = await repository.createOrder();
+      final message = await repository.createOrder(
+        cartItems: event.cartItems,
+        address: event.address,
+        subtotal: event.subtotal,
+        discount: event.discount,
+        total: event.total,
+      );
       emit(OrderSuccess(message));
     } on ApiException catch (e) {
       emit(OrderFailure(e.message));
